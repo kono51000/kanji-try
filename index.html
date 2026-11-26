@@ -1,0 +1,810 @@
+<!doctype html><html lang="th"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>กอล์ฟคันจิ — Kanji Golf</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#edf2e9;color:#173a32;font-family:system-ui,-apple-system,sans-serif}main{max-width:1100px;margin:auto;padding:24px}header{display:flex;align-items:center;justify-content:space-between;gap:12px}h1{margin:0;font-size:26px}small,.eyebrow{font-size:11px;letter-spacing:2px;color:#58756b}select,button{font:inherit;border:0;border-radius:12px;padding:12px;cursor:pointer}select{background:white;color:#173a32}.stats{display:flex;gap:20px;font-size:14px;margin:20px 0}.stats strong{font-size:23px}.layout{display:grid;grid-template-columns:1fr 285px;gap:20px}.course{background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 10px 40px #173a3210}.question{padding:22px;text-align:center}.question h2{margin:8px 0;font-size:26px}.blank{color:#c36b33}canvas{width:100%;display:block;touch-action:none;background:#6eaa72}.panel{background:#fff;border-radius:24px;padding:22px}label{display:block;margin-top:20px;font-weight:600;font-size:14px}input{width:100%;accent-color:#247358;margin:14px 0}button.primary{background:#215e48;color:white;width:100%;font-weight:700;margin-top:18px}button:disabled{opacity:.45;cursor:default}.hint{font-size:13px;line-height:1.8;color:#58756b}.feedback{min-height:112px;padding-top:18px;line-height:1.7;font-size:14px}.feedback strong{display:block;font-size:22px}.legend{font-size:12px;padding:14px 20px;color:#58756b}#result{background:white;border-radius:24px;padding:30px;margin-top:20px}#result h2{margin-top:0}.review{display:grid;gap:10px}.review div{padding:12px;background:#f0f5ef;border-radius:12px;font-size:14px}.hidden{display:none!important}footer{font-size:12px;color:#58756b;margin-top:18px}button.secondary{background:#eaf1e6;color:#215e48;margin-top:10px;width:100%}@media(max-width:760px){main{padding:14px}h1{font-size:21px}.layout{grid-template-columns:1fr}.panel{padding:18px}header{align-items:flex-start}.stats{gap:15px;margin:14px 0}.question{padding:15px}.question h2{font-size:23px}.feedback{min-height:0}label{margin-top:10px}.hint{margin:8px 0}canvas{max-height:440px}.eyebrow{letter-spacing:1px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+ruby{ruby-position:over}rt{font-size:.48em;font-weight:400;letter-spacing:0}.question h2{line-height:2.2}.feedback ruby,.review ruby{line-height:2.1}
+
+.certificate-form{margin:24px 0;padding:20px;background:#edf3eb;border-radius:16px}
+.certificate-form input{display:block;max-width:460px;padding:12px;border:1px solid #b4c9bb;border-radius:8px;background:white;font:inherit}
+.cert-dialog{border:0;border-radius:18px;width:min(950px,96vw);max-height:94vh;padding:20px;background:#edf2e9;color:#173a32}
+.cert-dialog::backdrop{background:#142c24b3}
+.cert-actions{display:flex;justify-content:flex-end;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.cert-actions button{background:#215e48;color:white}
+.certificate{position:relative;padding:54px 40px;text-align:center;background:#fffdf4;border:8px double #a88742;outline:1px solid #a88742;outline-offset:-20px;overflow-wrap:anywhere}
+.certificate .cert-brand{font-size:12px;letter-spacing:3px;color:#7c6639}
+.certificate h2{font-size:42px;margin:20px 0 0;color:#215e48}
+.certificate .cert-name{font-size:32px;font-weight:700;border-bottom:1px solid #c4b37e;max-width:650px;margin:24px auto;padding:8px;white-space:pre-wrap}
+.certificate .cert-score{font-size:28px;font-weight:700;margin:20px}
+.certificate p{line-height:1.8;margin:10px 0}
+.certificate .cert-note{font-size:11px;color:#716b57;margin-top:30px}
+@media(max-width:600px){.certificate{padding:35px 23px}.certificate h2{font-size:30px}.certificate .cert-name{font-size:24px}.cert-dialog{padding:12px}}
+@media print{
+ @page{size:A4 landscape;margin:12mm}
+ body{background:white}
+ body>main{display:none!important}
+ .cert-dialog[open]{position:static;width:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;overflow:visible;background:white}
+ .cert-actions{display:none!important}
+ .certificate{padding:15mm 10mm;break-inside:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+ .certificate h2{font-size:36pt}
+ .certificate .cert-name{font-size:25pt}
+}
+</style>
+<main><header><div><div class="eyebrow">ฝึกภาษาญี่ปุ่น</div><h1>กอล์ฟคันจิ ⛳</h1></div><select id="difficulty" aria-label="ระดับความยาก"><option value="easy">ง่าย · ไม่มีลม</option><option value="normal" selected>ปานกลาง · ลมอ่อน</option><option value="hard">ยาก · ลมแรง</option></select></header>
+<div class="stats" style="flex-wrap:wrap;align-items:center"><span>ข้อ <strong id="count">1 / 30</strong></span><span>คะแนน <strong id="score">0</strong></span><span id="wind">ไม่มีลม</span><span id="timer" role="timer" aria-live="off">เป้าจะเริ่มขยับใน 10 วิ</span></div>
+<div class="layout" id="game"><section class="course"><div class="question"><small>เล็งไปที่คันจิที่ตรงกับความหมาย</small><h2 id="sentence" lang="th"></h2></div><canvas id="field" width="800" height="580" aria-label="สนามกอล์ฟคันจิ แตะเพื่อกำหนดทิศทาง"></canvas><div class="legend">ลูกศรบอกทิศทางการตี ลมจะพัดลูกไปทางซ้ายหรือขวา</div></section>
+<aside class="panel"><div class="eyebrow">ตั้งค่าการตี</div><label for="angle">ทิศทาง <span id="angleValue"></span></label><input id="angle" type="range" min="-65" max="65" value="0"><label for="power">แรงตี <span id="powerValue"></span></label><input id="power" type="range" min="10" max="100" value="65"><button id="shoot" class="primary">ตีลูก! ↗</button><button id="next" class="secondary hidden">ข้อต่อไป →</button><p class="hint">① เลือกคันจิที่ตรงกับความหมายภาษาไทย<br>② ปรับทิศทางและแรงตี<br>③ กดตีลูกได้ทุกเมื่อ เป้าจะเริ่มขยับหลังครบ 10 วินาที<br>แตะที่สนามเพื่อเปลี่ยนทิศทาง แล้วปรับแรงตีด้วยแถบเลื่อน</p><div id="feedback" class="feedback" role="status" aria-live="polite"></div></aside></div>
+<section id="result" class="hidden" aria-live="polite"></section><footer>ตกในวงที่ถูก: 1 คะแนน / ตกในวงที่ผิด: 0 คะแนน / ไม่เข้าวงไหน: ตีใหม่ในข้อเดิม สุ่ม 30 ข้อจากทั้งหมด 51 ข้อ</footer></main>
+
+<dialog id="certificateDialog" class="cert-dialog" aria-labelledby="certificateTitle">
+<div class="cert-actions"><button id="printCertificate" type="button">พิมพ์ / บันทึกเป็น PDF</button><button id="closeCertificate" type="button">กลับไปดูผลคะแนน</button></div>
+<article class="certificate">
+<div class="cert-brand">GRAMMAR GOLF · JAPANESE PRACTICE</div>
+<h2 id="certificateTitle">เกียรติบัตรการฝึกฝน</h2>
+<p>ขอมอบเกียรติบัตรฉบับนี้ให้แก่</p>
+<div id="certificateName" class="cert-name"></div>
+<p>เพื่อแสดงว่าได้ทำกิจกรรมฝึกคันจิภาษาญี่ปุ่นครบ 1 รอบ</p>
+<p>ชุดฝึกคันจิ · จำนวน 30 ข้อ</p>
+<div id="certificateScore" class="cert-score"></div>
+<p id="certificateDifficulty"></p>
+<p id="certificateDate"></p>
+<p class="cert-note">เกียรติบัตรนี้เป็นบันทึกการฝึกฝนคันจิในเกม</p>
+</article></dialog>
+
+<script>
+'use strict';
+const questions=[
+  [
+    "มาก",
+    [
+      "多い",
+      "夕い",
+      "移い",
+      "外い"
+    ],
+    "多い",
+    "คำตอบ: 多い · คำอ่าน: おおい · ความหมาย: มาก",
+    "おおい"
+  ],
+  [
+    "ภูเขา",
+    [
+      "山",
+      "小",
+      "ム",
+      "人"
+    ],
+    "山",
+    "คำตอบ: 山 · คำอ่าน: やま · ความหมาย: ภูเขา",
+    "やま"
+  ],
+  [
+    "ประเทศ",
+    [
+      "国",
+      "囲",
+      "因",
+      "固"
+    ],
+    "国",
+    "คำตอบ: 国 · คำอ่าน: くに · ความหมาย: ประเทศ",
+    "くに"
+  ],
+  [
+    "น้ำ",
+    [
+      "水",
+      "氷",
+      "永",
+      "小"
+    ],
+    "水",
+    "คำตอบ: 水 · คำอ่าน: みず · ความหมาย: น้ำ",
+    "みず"
+  ],
+  [
+    "ไป",
+    [
+      "行きます",
+      "件きます",
+      "住きます",
+      "伝きます"
+    ],
+    "行きます",
+    "คำตอบ: 行きます · คำอ่าน: いきます · ความหมาย: ไป",
+    "いきます"
+  ],
+  [
+    "คน",
+    [
+      "人",
+      "入",
+      "又",
+      "火"
+    ],
+    "人",
+    "คำตอบ: 人 · คำอ่าน: ひと · ความหมาย: คน",
+    "ひと"
+  ],
+  [
+    "เล็ก",
+    [
+      "小さい",
+      "少さい",
+      "八さい",
+      "木さい"
+    ],
+    "小さい",
+    "คำตอบ: 小さい · คำอ่าน: ちいさい · ความหมาย: เล็ก",
+    "ちいさい"
+  ],
+  [
+    "บน",
+    [
+      "上",
+      "土",
+      "士",
+      "止"
+    ],
+    "上",
+    "คำตอบ: 上 · คำอ่าน: うえ · ความหมาย: บน",
+    "うえ"
+  ],
+  [
+    "ผู้ใหญ่",
+    [
+      "大人",
+      "太人",
+      "太入",
+      "大入"
+    ],
+    "大人",
+    "คำตอบ: 大人 · คำอ่าน: おとな · ความหมาย: ผู้ใหญ่",
+    "おとな"
+  ],
+  [
+    "ครู",
+    [
+      "先生",
+      "先主",
+      "光失",
+      "先失"
+    ],
+    "先生",
+    "คำตอบ: 先生 · คำอ่าน: せんせい · ความหมาย: ครู",
+    "せんせい"
+  ],
+  [
+    "ถูก",
+    [
+      "安い",
+      "字い",
+      "宇い",
+      "宅い"
+    ],
+    "安い",
+    "คำตอบ: 安い · คำอ่าน: やすい · ความหมาย: ถูก",
+    "やすい"
+  ],
+  [
+    "ตา",
+    [
+      "目",
+      "且",
+      "自",
+      "白"
+    ],
+    "目",
+    "คำตอบ: 目 · คำอ่าน: め · ความหมาย: ตา",
+    "め"
+  ],
+  [
+    "ขา",
+    [
+      "足",
+      "疋",
+      "兄",
+      "促"
+    ],
+    "足",
+    "คำตอบ: 足 · คำอ่าน: あし · ความหมาย: ขา",
+    "あし"
+  ],
+  [
+    "เด็ก",
+    [
+      "了ども",
+      "子ども",
+      "予ども",
+      "矛ども"
+    ],
+    "子ども",
+    "คำตอบ: 子ども · คำอ่าน: こども · ความหมาย: เด็ก",
+    "こども"
+  ],
+  [
+    "สูง แพง",
+    [
+      "藁い",
+      "高い",
+      "亭い",
+      "喬い"
+    ],
+    "高い",
+    "คำตอบ: 高い · คำอ่าน: たかい · ความหมาย: สูง แพง",
+    "たかい"
+  ],
+  [
+    "ญี่ปุ่น",
+    [
+      "日木",
+      "日本",
+      "日木",
+      "目本"
+    ],
+    "日本",
+    "คำตอบ: 日本 · คำอ่าน: にほん · ความหมาย: ญี่ปุ่น",
+    "にほん"
+  ],
+  [
+    "เพื่อน",
+    [
+      "在だり",
+      "友だち",
+      "布だち",
+      "左だり"
+    ],
+    "友だち",
+    "คำตอบ: 友だち · คำอ่าน: ともだち · ความหมาย: เพื่อน",
+    "ともだち"
+  ],
+  [
+    "กิน",
+    [
+      "良べます",
+      "食べます",
+      "養べます",
+      "会べます"
+    ],
+    "食べます",
+    "คำตอบ: 食べます · คำอ่าน: たべます · ความหมาย: กิน",
+    "たべます"
+  ],
+  [
+    "ดิฉัน",
+    [
+      "和",
+      "私",
+      "利",
+      "秘"
+    ],
+    "私",
+    "คำตอบ: 私 · คำอ่าน: わたし · ความหมาย: ดิฉัน",
+    "わたし"
+  ],
+  [
+    "ใหญ่",
+    [
+      "犬きい",
+      "大きい",
+      "太きい",
+      "夭きい"
+    ],
+    "大きい",
+    "คำตอบ: 大きい · คำอ่าน: おおきい · ความหมาย: ใหญ่",
+    "おおきい"
+  ],
+  [
+    "ซ้าย",
+    [
+      "友",
+      "左",
+      "右",
+      "石"
+    ],
+    "左",
+    "คำตอบ: 左 · คำอ่าน: ひだり · ความหมาย: ซ้าย",
+    "ひだり"
+  ],
+  [
+    "พัน",
+    [
+      "丁",
+      "千",
+      "午",
+      "干"
+    ],
+    "千",
+    "คำตอบ: 千 · คำอ่าน: せん · ความหมาย: พัน",
+    "せん"
+  ],
+  [
+    "เก่า",
+    [
+      "新い",
+      "古い",
+      "吉い",
+      "早い"
+    ],
+    "古い",
+    "คำตอบ: 古い · คำอ่าน: ふるい · ความหมาย: เก่า",
+    "ふるい"
+  ],
+  [
+    "จีน",
+    [
+      "巾国",
+      "中国",
+      "仲国",
+      "史国"
+    ],
+    "中国",
+    "คำตอบ: 中国 · คำอ่าน: ちゅうごく · ความหมาย: จีน",
+    "ちゅうごく"
+  ],
+  [
+    "พระจันทร์",
+    [
+      "明",
+      "月",
+      "目",
+      "用"
+    ],
+    "月",
+    "คำตอบ: 月 · คำอ่าน: つき · ความหมาย: พระจันทร์",
+    "つき"
+  ],
+  [
+    "น้อย",
+    [
+      "ムない",
+      "少ない",
+      "小ない",
+      "示ない"
+    ],
+    "少ない",
+    "คำตอบ: 少ない · คำอ่าน: すくない · ความหมาย: น้อย",
+    "すくない"
+  ],
+  [
+    "โรงเรียน",
+    [
+      "栄校",
+      "労校",
+      "学校",
+      "字校"
+    ],
+    "学校",
+    "คำตอบ: 学校 · คำอ่าน: がっこう · ความหมาย: โรงเรียน",
+    "がっこう"
+  ],
+  [
+    "หู",
+    [
+      "瓦",
+      "且",
+      "耳",
+      "亘"
+    ],
+    "耳",
+    "คำตอบ: 耳 · คำอ่าน: みみ · ความหมาย: หู",
+    "みみ"
+  ],
+  [
+    "ขวา",
+    [
+      "左",
+      "友",
+      "右",
+      "石"
+    ],
+    "右",
+    "คำตอบ: 右 · คำอ่าน: みぎ · ความหมาย: ขวา",
+    "みぎ"
+  ],
+  [
+    "นักเรียน",
+    [
+      "栄生",
+      "労生",
+      "学生",
+      "字生"
+    ],
+    "学生",
+    "คำตอบ: 学生 · คำอ่าน: がくせい · ความหมาย: นักเรียน",
+    "がくせい"
+  ],
+  [
+    "ร้อย",
+    [
+      "白",
+      "石",
+      "百",
+      "頁"
+    ],
+    "百",
+    "คำตอบ: 百 · คำอ่าน: ひゃく · ความหมาย: ร้อย",
+    "ひゃく"
+  ],
+  [
+    "ใหม่",
+    [
+      "折しい",
+      "祈しい",
+      "新しい",
+      "親しい"
+    ],
+    "新しい",
+    "คำตอบ: 新しい · คำอ่าน: あたらしい · ความหมาย: ใหม่",
+    "あたらしい"
+  ],
+  [
+    "เข้า",
+    [
+      "ナります",
+      "ハります",
+      "入ります",
+      "人ります"
+    ],
+    "入ります",
+    "คำตอบ: 入ります · คำอ่าน: はいります · ความหมาย: เข้า",
+    "はいります"
+  ],
+  [
+    "ปาก",
+    [
+      "目",
+      "只",
+      "口",
+      "日"
+    ],
+    "口",
+    "คำตอบ: 口 · คำอ่าน: くち · ความหมาย: ปาก",
+    "くち"
+  ],
+  [
+    "ไฟ",
+    [
+      "欠",
+      "介",
+      "火",
+      "炎"
+    ],
+    "火",
+    "คำตอบ: 火 · คำอ่าน: ひ · ความหมาย: ไฟ",
+    "ひ"
+  ],
+  [
+    "ยาว",
+    [
+      "镸い",
+      "良い",
+      "長い",
+      "辰い"
+    ],
+    "長い",
+    "คำตอบ: 長い · คำอ่าน: ながい · ความหมาย: ยาว",
+    "ながい"
+  ],
+  [
+    "แม่",
+    [
+      "苺",
+      "毋",
+      "母",
+      "毎"
+    ],
+    "母",
+    "คำตอบ: 母 · คำอ่าน: はは · ความหมาย: แม่",
+    "はは"
+  ],
+  [
+    "ภาษาญี่ปุ่น",
+    [
+      "日本詰",
+      "日本詔",
+      "日本語",
+      "日本話"
+    ],
+    "日本語",
+    "คำตอบ: 日本語 · คำอ่าน: にほんご · ความหมาย: ภาษาญี่ปุ่น",
+    "にほんご"
+  ],
+  [
+    "ชาย",
+    [
+      "甲",
+      "里",
+      "早",
+      "男"
+    ],
+    "男",
+    "คำตอบ: 男 · คำอ่าน: おとこ · ความหมาย: ชาย",
+    "おとこ"
+  ],
+  [
+    "แม่น้ำ",
+    [
+      "州",
+      "儿",
+      "爪",
+      "川"
+    ],
+    "川",
+    "คำตอบ: 川 · คำอ่าน: かわ · ความหมาย: แม่น้ำ",
+    "かわ"
+  ],
+  [
+    "หมื่น",
+    [
+      "方",
+      "勹",
+      "乙",
+      "万"
+    ],
+    "万",
+    "คำตอบ: 万 · คำอ่าน: まん · ความหมาย: หมื่น",
+    "まん"
+  ],
+  [
+    "พ่อ",
+    [
+      "爻",
+      "八",
+      "メ",
+      "父"
+    ],
+    "父",
+    "คำตอบ: 父 · คำอ่าน: ちち · ความหมาย: พ่อ",
+    "ちち"
+  ],
+  [
+    "หญิง",
+    [
+      "斤",
+      "互",
+      "去",
+      "女"
+    ],
+    "女",
+    "คำตอบ: 女 · คำอ่าน: おんな · ความหมาย: หญิง",
+    "おんな"
+  ],
+  [
+    "ต้นไม้",
+    [
+      "本",
+      "禾",
+      "末",
+      "木"
+    ],
+    "木",
+    "คำตอบ: 木 · คำอ่าน: き · ความหมาย: ต้นไม้",
+    "き"
+  ],
+  [
+    "ดิน",
+    [
+      "士",
+      "王",
+      "壬",
+      "土"
+    ],
+    "土",
+    "คำตอบ: 土 · คำอ่าน: ど · ความหมาย: ดิน",
+    "ど"
+  ],
+  [
+    "คนญี่ปุ่น",
+    [
+      "日本入",
+      "日木人",
+      "日木入",
+      "日本人"
+    ],
+    "日本人",
+    "คำตอบ: 日本人 · คำอ่าน: にほんじん · ความหมาย: คนญี่ปุ่น",
+    "にほんじん"
+  ],
+  [
+    "ต่างประเทศ",
+    [
+      "多国",
+      "汐国",
+      "夕国",
+      "外国"
+    ],
+    "外国",
+    "คำตอบ: 外国 · คำอ่าน: がいこく · ความหมาย: ต่างประเทศ",
+    "がいこく"
+  ],
+  [
+    "มือ",
+    [
+      "毛",
+      "彡",
+      "羊",
+      "手"
+    ],
+    "手",
+    "คำตอบ: 手 · คำอ่าน: て · ความหมาย: มือ",
+    "て"
+  ],
+  [
+    "ดู",
+    [
+      "貝ます",
+      "児ます",
+      "具ます",
+      "見ます"
+    ],
+    "見ます",
+    "คำตอบ: 見ます · คำอ่าน: みます · ความหมาย: ดู",
+    "みます"
+  ],
+  [
+    "ดอกไม้",
+    [
+      "英",
+      "苦",
+      "茄",
+      "花"
+    ],
+    "花",
+    "คำตอบ: 花 · คำอ่าน: はな · ความหมาย: ดอกไม้",
+    "はな"
+  ],
+  [
+    "ล่าง",
+    [
+      "丁",
+      "不",
+      "木",
+      "下"
+    ],
+    "下",
+    "คำตอบ: 下 · คำอ่าน: した · ความหมาย: ล่าง",
+    "した"
+  ]
+];
+const $=id=>document.getElementById(id),canvas=$('field'),ctx=canvas.getContext('2d');
+const tee={x:400,y:510},centers=[{x:170,y:165},{x:590,y:145},{x:220,y:335},{x:600,y:330}];
+let round=[],index=0,score=0,records=[],phase='aim',wind=0,ball={...tee},zones=[],animation=0;
+function renderKanjiAnswer(element,word,reading){
+ element.replaceChildren();
+ const ruby=document.createElement('ruby'),rt=document.createElement('rt');
+ ruby.append(document.createTextNode(word));rt.textContent=reading;ruby.append(rt);element.append(ruby);
+}
+function renderJapanese(element,text){
+  element.replaceChildren();
+  const pattern=/([^\[\]ぁ-んァ-ヶー\s（）【】。、0-9]+)\[([^\]]+)\]/g;
+  let last=0;
+  for(const match of text.matchAll(pattern)){
+    element.append(document.createTextNode(text.slice(last,match.index)));
+    const ruby=document.createElement('ruby'),rt=document.createElement('rt');
+    ruby.append(document.createTextNode(match[1]));
+    rt.textContent=match[2];
+    ruby.append(rt);
+    element.append(ruby);
+    last=match.index+match[0].length;
+  }
+  element.append(document.createTextNode(text.slice(last)));
+}
+function shuffle(a){return a.map(v=>({v,r:Math.random()})).sort((a,b)=>a.r-b.r).map(o=>o.v)}
+function landing(angle,power,withWind=true){const a=angle*Math.PI/180,d=power*4.8;return{x:tee.x+Math.sin(a)*d+(withWind?wind*(power/70)**2:0),y:tee.y-Math.cos(a)*d}}
+function hit(p){return zones.find(z=>Math.hypot(p.x-z.x,p.y-z.y)<=z.r)}
+function draw(){ctx.clearRect(0,0,800,580);ctx.fillStyle='#79b57b';ctx.fillRect(0,0,800,580);for(let i=0;i<10;i++){ctx.fillStyle=i%2?'#ffffff08':'#204d2208';ctx.fillRect(0,i*58,800,58)}ctx.strokeStyle='#ffffff20';ctx.lineWidth=2;[150,300,450].forEach(r=>{ctx.beginPath();ctx.arc(tee.x,tee.y,r,Math.PI,Math.PI*2);ctx.stroke()});
+ctx.fillStyle='#406e4f';ctx.beginPath();ctx.ellipse(400,535,70,22,0,0,Math.PI*2);ctx.fill();
+zones.forEach((z,i)=>{ctx.fillStyle=['#e8ecc0','#d2e9d3','#f2dab5','#cce4dd'][i];ctx.beginPath();ctx.arc(z.x,z.y,z.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle=phase==='feedback'&&z.label===round[index][2]?'#174f36':'#ffffffaa';ctx.lineWidth=phase==='feedback'&&z.label===round[index][2]?6:2;ctx.stroke();ctx.fillStyle='#244937';let fontSize=36;
+ctx.font=`bold ${fontSize}px system-ui`;
+while(ctx.measureText(z.label).width>z.r*1.65&&fontSize>16){fontSize--;ctx.font=`bold ${fontSize}px system-ui`;}
+ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(z.label,z.x,z.y);});
+if(phase==='aim'){
+  const angle=Number($('angle').value)*Math.PI/180;
+  ctx.save();
+  ctx.translate(tee.x,tee.y);
+  ctx.rotate(angle);
+  ctx.strokeStyle='#fff';
+  ctx.lineWidth=4;
+  ctx.lineCap='round';
+  ctx.lineJoin='round';
+  ctx.beginPath();
+  ctx.moveTo(0,-15);
+  ctx.lineTo(0,-49);
+  ctx.moveTo(-10,-39);
+  ctx.lineTo(0,-49);
+  ctx.lineTo(10,-39);
+  ctx.stroke();
+  ctx.restore();
+}
+ctx.fillStyle='#173a3240';ctx.beginPath();ctx.ellipse(ball.x,ball.y+5,8,4,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='white';ctx.beginPath();ctx.arc(ball.x,ball.y-(ball.lift||0),8+(ball.lift||0)/20,0,Math.PI*2);ctx.fill();}
+function controls(){ $('angleValue').textContent=`${$('angle').value}°`;$('powerValue').textContent=`${$('power').value}%`;draw()}
+const WAIT_MS=10000;
+let targetStart=0,targetFrame=0;
+function updateTargets(now){
+  const elapsed=now-targetStart;
+  if(elapsed<WAIT_MS){
+    $('timer').textContent=`เป้าจะเริ่มขยับใน ${Math.ceil((WAIT_MS-elapsed)/1000)} วิ`;
+    return;
+  }
+  $('timer').textContent='เป้ากำลังขยับ';
+  const t=(elapsed-WAIT_MS)/1000;
+  zones.forEach((z,i)=>{
+    const row=i<2?1:-1;
+    z.x=centers[i].x+row*110*Math.sin(t*1.5);
+    z.y=centers[i].y+28*Math.sin(t*1.1);
+  });
+}
+function startTargets(reset=true){
+  cancelAnimationFrame(targetFrame);
+  if(reset)targetStart=performance.now();
+  updateTargets(performance.now());
+  function tick(now){
+    if(phase!=='aim')return;
+    updateTargets(now);
+    draw();
+    targetFrame=requestAnimationFrame(tick);
+  }
+  targetFrame=requestAnimationFrame(tick);
+}
+function load(){phase='aim';ball={...tee};const q=round[index],difficulty=$('difficulty').value,r={easy:85,normal:65,hard:49}[difficulty];zones=shuffle(q[1]).map((label,i)=>({...centers[i],label,r}));wind=difficulty==='easy'?0:(Math.random()<0.5?-1:1)*(difficulty==='hard'?70+Math.random()*50:30+Math.random()*30);$('wind').textContent=wind===0?'🍃 ไม่มีลม':`${wind<0?'←':'→'} ลม ${Math.abs(wind/15).toFixed(1)} m/s`;renderJapanese($('sentence'),q[0]);$('count').textContent=`${index+1} / ${round.length}`;$('score').textContent=score;$('feedback').textContent='';$('next').classList.add('hidden');$('shoot').disabled=false;$('angle').disabled=$('power').disabled=false;$('angle').value=0;$('power').value=65;controls();startTargets()}
+function start(){cancelAnimationFrame(animation);round=shuffle(questions).slice(0,30);index=0;score=0;records=[];$('game').classList.remove('hidden');$('result').classList.add('hidden');$('difficulty').disabled=false;load()}
+function finishShot(target){
+  const z=hit(target);
+  if(!z){
+    phase='aim';
+    ball={...tee};
+    $('feedback').textContent='ลูกไม่เข้าวงไหน ลองตีใหม่!';
+    $('shoot').disabled=false;
+    $('angle').disabled=$('power').disabled=false;
+    startTargets(false);
+    draw();
+    return;
+  }
+  ball={...target};
+  phase='feedback';
+  $('timer').textContent='ลูกตกแล้ว';
+  const q=round[index],correct=z.label===q[2],points=correct?1:0;
+  score+=points;records.push({q:q[0],answer:q[2],actual:z.label,points,explain:q[3],reading:q[4]});$('score').textContent=score;const f=$('feedback');f.replaceChildren();const title=document.createElement('strong');title.textContent=correct?'ตีได้ตรงเป้า! +1 คะแนน':'ลูกตกในวงคันจิที่ไม่ถูกต้อง';const answer=document.createElement('span');answer.lang='ja';renderKanjiAnswer(answer,q[2],q[4]);f.append(title,answer,document.createElement('br'),document.createTextNode(q[3]));$('next').textContent=index===round.length-1?'ดูผลคะแนน →':'ข้อต่อไป →';$('next').classList.remove('hidden');draw()}
+function shoot(){if(phase!=='aim')return;cancelAnimationFrame(targetFrame);updateTargets(performance.now());$('feedback').textContent='';phase='flight';$('difficulty').disabled=true;$('shoot').disabled=true;$('angle').disabled=$('power').disabled=true;const a=+$('angle').value,p=+$('power').value,target=landing(a,p),time=performance.now(),duration=matchMedia('(prefers-reduced-motion: reduce)').matches?100:1050;function step(now){updateTargets(now);const t=Math.min(1,(now-time)/duration),s=1-(1-t)**2;ball={x:tee.x+(target.x-tee.x)*s,y:tee.y+(target.y-tee.y)*s,lift:Math.sin(Math.PI*t)*95};draw();if(t<1)animation=requestAnimationFrame(step);else finishShot(target)}animation=requestAnimationFrame(step)}
+$('shoot').onclick=()=>shoot();
+
+let completedRound=null;
+function addCertificateForm(result){
+  completedRound={
+    score,
+    total:round.length,
+    difficulty:({easy:'ง่าย',normal:'ปานกลาง',hard:'ยาก'})[$('difficulty').value],
+    date:new Intl.DateTimeFormat('th-TH',{dateStyle:'long',timeZone:'Asia/Bangkok'}).format(new Date())
+  };
+  const form=document.createElement('form');
+  form.className='certificate-form';
+  const label=document.createElement('label');
+  label.htmlFor='learnerName';
+  label.textContent='ชื่อสำหรับเกียรติบัตร';
+  const input=document.createElement('input');
+  input.id='learnerName';input.name='learnerName';input.type='text';
+  input.required=true;input.maxLength=80;input.autocomplete='name';
+  input.placeholder='กรอกชื่อของคุณ';
+  const button=document.createElement('button');
+  button.type='submit';button.className='primary';button.textContent='สร้างเกียรติบัตร';
+  form.append(label,input,button);
+  form.onsubmit=e=>{
+    e.preventDefault();
+    const name=input.value.trim();
+    if(!name){input.setCustomValidity('กรุณากรอกชื่อ');input.reportValidity();return;}
+    input.setCustomValidity('');
+    $('certificateName').textContent=name;
+    $('certificateScore').textContent=`คะแนน ${completedRound.score} / ${completedRound.total}`;
+    $('certificateDifficulty').textContent=`ระดับ: ${completedRound.difficulty}`;
+    $('certificateDate').textContent=`วันที่ ${completedRound.date}`;
+    $('certificateDialog').showModal();
+  };
+  input.oninput=()=>input.setCustomValidity('');
+  result.append(form);
+}
+$('printCertificate').onclick=()=>window.print();
+$('closeCertificate').onclick=()=>$('certificateDialog').close();
+
+$('next').onclick=()=>{if(phase!=='feedback')return;if(index<round.length-1){index++;load()}else{phase='result';$('game').classList.add('hidden');const r=$('result');r.replaceChildren();r.classList.remove('hidden');const h=document.createElement('h2');h.textContent=`จบรอบ! ${score} / ${round.length} คะแนน`;const p=document.createElement('p');p.textContent=`ตีเข้าโซนที่ถูก ${records.filter(x=>x.points===1).length} / ${round.length} ข้อ`;r.append(h,p);addCertificateForm(r);const review=document.createElement('div');review.className='review';records.forEach((x,i)=>{const d=document.createElement('div');const answer=document.createElement('span');answer.lang='ja';renderKanjiAnswer(answer,x.answer,x.reading);d.append(document.createTextNode(`${i+1}. ${x.q} → `),answer,document.createElement('br'),document.createTextNode(`ลูกตกที่: ${x.actual} (${x.points} คะแนน) — ${x.explain}`));review.append(d)});const b=document.createElement('button');b.className='primary';b.textContent='เล่นอีกครั้ง';b.onclick=start;r.append(review,b);$('difficulty').disabled=false}};
+$('angle').oninput=$('power').oninput=controls;$('difficulty').onchange=start;
+canvas.onpointerdown=e=>{if(phase!=='aim')return;const rect=canvas.getBoundingClientRect(),x=(e.clientX-rect.left)*800/rect.width,y=(e.clientY-rect.top)*580/rect.height,dx=x-tee.x,dy=tee.y-y;$('angle').value=Math.max(-65,Math.min(65,Math.atan2(dx,dy)*180/Math.PI));controls()};start();
+</script></html>
